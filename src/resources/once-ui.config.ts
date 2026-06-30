@@ -20,6 +20,7 @@ const routes: RoutesConfig = {
   "/": true,
   "/login": true,
   "/dashboard": true,
+  "/admin/verify-requests": true,
 };
 
 const display: DisplayConfig = {

@@ -9,15 +9,18 @@ import {
   RevealFx,
   Column,
   Row,
+  Line,
 } from "@once-ui-system/core";
 import { auth } from "@/lib/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import RequestAccessModal from "@/components/RequestAccessModal";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showAccessModal, setShowAccessModal] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -116,8 +119,49 @@ export default function Login() {
               </Button>
             </form>
           </RevealFx>
+
+          {/* Divider and Request Access Section */}
+          <RevealFx translateY="16" delay={0.3} fillWidth paddingTop="8">
+            <Column gap="16" fillWidth horizontal="center">
+              <Row fillWidth gap="12" vertical="center">
+                <Line background="neutral-alpha-medium" />
+                <Text
+                  variant="label-default-s"
+                  onBackground="neutral-medium"
+                  style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+                >
+                  New facility?
+                </Text>
+                <Line background="neutral-alpha-medium" />
+              </Row>
+
+              <Button
+                variant="secondary"
+                size="l"
+                fillWidth
+                onClick={() => setShowAccessModal(true)}
+              >
+                Request Platform Access
+              </Button>
+
+              <Text
+                variant="body-default-s"
+                onBackground="neutral-weak"
+                align="center"
+                style={{ maxWidth: "320px" }}
+              >
+                Submit your PHC/CHC establishment documents for verification to gain dashboard access.
+              </Text>
+            </Column>
+          </RevealFx>
         </Column>
       </Column>
+
+      {/* Request Access Modal */}
+      <RequestAccessModal
+        isOpen={showAccessModal}
+        onClose={() => setShowAccessModal(false)}
+      />
     </Column>
   );
 }

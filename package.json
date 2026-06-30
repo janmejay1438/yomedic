@@ -13,6 +13,7 @@
     "@mdx-js/loader": "^3.1.0",
     "@next/mdx": "^16.0.10",
     "@once-ui-system/core": "latest",
+    "@supabase/supabase-js": "^2.108.2",
     "classnames": "^2.5.1",
     "cookie": "^1.0.2",
     "firebase": "^12.15.0",

@@ -1,0 +1,295 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: fadeIn 0.25s ease-out;
+  padding: 16px;
+}
+
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface-background);
+  border: 1px solid var(--neutral-alpha-weak);
+  border-radius: 20px;
+  padding: 40px 32px 32px;
+  box-shadow:
+    0 32px 64px -16px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--neutral-alpha-weak);
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--neutral-on-background-strong);
+  font-size: 18px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  background: var(--neutral-alpha-medium);
+  transform: scale(1.05);
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--neutral-alpha-medium);
+  background: var(--neutral-alpha-weak);
+  color: var(--neutral-on-background-strong);
+  font-size: 15px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--brand-border-strong);
+  box-shadow: 0 0 0 3px var(--brand-alpha-weak);
+}
+
+.input::placeholder {
+  color: var(--neutral-on-background-weak);
+}
+
+.fileUploadArea {
+  position: relative;
+  width: 100%;
+  min-height: 120px;
+  border: 2px dashed var(--neutral-alpha-medium);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: var(--neutral-alpha-weak);
+}
+
+.fileUploadArea:hover {
+  border-color: var(--brand-border-strong);
+  background: var(--brand-alpha-weak);
+}
+
+.fileUploadArea.dragActive {
+  border-color: var(--brand-border-strong);
+  background: var(--brand-alpha-weak);
+  transform: scale(1.01);
+}
+
+.fileInput {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.uploadIcon {
+  font-size: 32px;
+  opacity: 0.6;
+}
+
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.fileItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--neutral-alpha-weak);
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: 10px;
+  animation: fadeSlideIn 0.2s ease-out;
+}
+
+.fileItemInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.fileIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.fileName {
+  font-size: 13px;
+  color: var(--neutral-on-background-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileSize {
+  font-size: 12px;
+  color: var(--neutral-on-background-weak);
+  flex-shrink: 0;
+}
+
+.removeFileBtn {
+  background: none;
+  border: none;
+  color: var(--danger-on-background-medium);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.removeFileBtn:hover {
+  background: var(--danger-alpha-weak);
+  color: var(--danger-on-background-strong);
+}
+
+.progressBarContainer {
+  width: 100%;
+  height: 6px;
+  background: var(--neutral-alpha-weak);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--brand-background-strong),
+    var(--accent-background-strong)
+  );
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.successMessage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0;
+  text-align: center;
+  animation: fadeSlideIn 0.4s ease-out;
+}
+
+.successIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--success-background-strong),
+    var(--brand-background-strong)
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: white;
+  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.errorBox {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--danger-alpha-weak);
+  border: 1px solid var(--danger-alpha-medium);
+  border-radius: 10px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Scrollbar styling for the modal */
+.modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: var(--neutral-alpha-medium);
+  border-radius: 3px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+  background: var(--neutral-alpha-strong);
+}
