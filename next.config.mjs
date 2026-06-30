@@ -9,6 +9,7 @@ const withMDX = mdx({
 const nextConfig = {
   pageExtensions: ["ts", "tsx", "md", "mdx"],
   transpilePackages: ["next-mdx-remote"],
+  serverExternalPackages: ["firebase-admin"],
   images: {
     remotePatterns: [
       {
