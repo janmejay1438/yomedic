@@ -17,6 +17,7 @@
     "classnames": "^2.5.1",
     "cookie": "^1.0.2",
     "firebase": "^12.15.0",
+    "firebase-admin": "^14.1.0",
     "gray-matter": "^4.0.3",
     "lint-staged": "^16.1.5",
     "next": "^16.0.10",

@@ -34,3 +34,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+yomedic-17009-firebase-adminsdk-fbsvc-fc63520304.json

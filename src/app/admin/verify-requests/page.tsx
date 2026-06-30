@@ -53,31 +53,51 @@ export default function VerifyRequests() {
     return () => unsubscribe();
   }, [router]);
 
-  // Fetch access requests from Supabase
+  // Fetch access requests via the secure API proxy.
+  // The proxy verifies the Firebase ID token server-side and uses the
+  // Supabase service_role key to bypass RLS — the client never touches
+  // the service_role key or queries Supabase directly for admin data.
   const fetchRequests = useCallback(async () => {
     setLoadingData(true);
     setError("");
 
     try {
-      let query = supabase
-        .from("access_requests")
-        .select("*")
-        .order("submitted_at", { ascending: false });
+      // Get a fresh Firebase ID token (force-refresh = true to avoid stale JWTs)
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error("Not authenticated.");
+      }
+      const idToken = await currentUser.getIdToken(true);
 
-      if (filter !== "all") {
-        query = query.eq("status", filter);
+      // Call the secure API proxy with the Bearer token
+      const res = await fetch(
+        `/api/admin/get-requests?status=${filter}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          },
+          // Ensure no browser caching of admin data
+          cache: "no-store",
+        }
+      );
+
+      if (res.status === 401) {
+        throw new Error("Authentication failed. Please sign in again.");
+      }
+      if (res.status === 403) {
+        throw new Error("Access denied. You do not have admin privileges.");
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Request failed with status ${res.status}`);
       }
 
-      const { data, error: fetchError } = await query;
-
-      if (fetchError) {
-        throw new Error(fetchError.message);
-      }
-
+      const { data } = await res.json();
       setRequests((data as AccessRequest[]) || []);
     } catch (err: any) {
       console.error("Error fetching requests:", err);
-      setError("Failed to fetch access requests. Ensure you have admin permissions.");
+      setError(err.message || "Failed to fetch access requests.");
     } finally {
       setLoadingData(false);
     }
