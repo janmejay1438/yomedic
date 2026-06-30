@@ -37,5 +37,8 @@
     "eslint": "^9.25.0",
     "typescript": "^5.8.3",
     "tzdata": "^1.0.44"
+  },
+  "overrides": {
+    "jose": "^4.15.5"
   }
 }
