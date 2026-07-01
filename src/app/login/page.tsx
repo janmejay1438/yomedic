@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Heading,
   Text,
@@ -10,158 +8,163 @@ import {
   Column,
   Row,
   Line,
+  Badge,
 } from "@once-ui-system/core";
-import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import RequestAccessModal from "@/components/RequestAccessModal";
 
-export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showAccessModal, setShowAccessModal] = useState(false);
-  const router = useRouter();
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // On success, redirect to the dashboard
-      router.push("/dashboard"); // Assuming you will build a dashboard
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in. Please check your credentials.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+export default function LoginSelector() {
   return (
-    <Column maxWidth="m" gap="xl" paddingY="12" horizontal="center" fillWidth>
+    <Column maxWidth="l" gap="xl" paddingY="12" horizontal="center" fillWidth>
       <Column fillWidth horizontal="center" gap="m">
-        <Column maxWidth="s" horizontal="center" align="center" padding="24" background="surface" style={{ borderRadius: '16px', border: '1px solid var(--neutral-alpha-weak)', width: '100%' }}>
-          <RevealFx translateY="4" fillWidth horizontal="center" paddingBottom="16">
-            <Heading wrap="balance" variant="display-strong-s">
-              Administrator Login
+        <Column maxWidth="m" horizontal="center" align="center">
+          <RevealFx translateY="4" fillWidth horizontal="center" paddingBottom="8">
+            <Heading wrap="balance" variant="display-strong-s" align="center">
+              Choose Your Portal
             </Heading>
           </RevealFx>
           <RevealFx translateY="8" delay={0.1} fillWidth horizontal="center" paddingBottom="32">
-            <Text wrap="balance" onBackground="neutral-weak" variant="body-default-m" align="center">
-              Access the Yomedic AI platform for real-time district health centre management.
+            <Text wrap="balance" onBackground="neutral-weak" variant="body-default-l" align="center">
+              Select the appropriate login portal to access the Yomedic platform.
             </Text>
-          </RevealFx>
-          
-          <RevealFx translateY="12" delay={0.2} fillWidth paddingBottom="16">
-            <form onSubmit={handleLogin} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {error && (
-                <Text variant="body-default-s" onBackground="danger-medium" style={{ textAlign: 'center', marginBottom: '8px' }}>
-                  {error}
-                </Text>
-              )}
-              <Column gap="8" fillWidth>
-                <Text variant="label-strong-m">Email Address</Text>
-                <input 
-                  type="email" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@district.gov" 
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--neutral-alpha-medium)',
-                    background: 'var(--neutral-alpha-weak)',
-                    color: 'var(--neutral-on-background-strong)',
-                    fontSize: '16px',
-                    outline: 'none'
-                  }}
-                />
-              </Column>
-              <Column gap="8" fillWidth>
-                <Text variant="label-strong-m">Password</Text>
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" 
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--neutral-alpha-medium)',
-                    background: 'var(--neutral-alpha-weak)',
-                    color: 'var(--neutral-on-background-strong)',
-                    fontSize: '16px',
-                    outline: 'none'
-                  }}
-                />
-              </Column>
-              
-              <Row fillWidth horizontal="end" paddingBottom="16">
-                <Text variant="label-default-s" onBackground="brand-medium" style={{ cursor: 'pointer' }}>
-                  Forgot Password?
-                </Text>
-              </Row>
-
-              <Button
-                type="submit"
-                variant="primary"
-                size="l"
-                weight="strong"
-                fillWidth
-              >
-                {loading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-          </RevealFx>
-
-          {/* Divider and Request Access Section */}
-          <RevealFx translateY="16" delay={0.3} fillWidth paddingTop="8">
-            <Column gap="16" fillWidth horizontal="center">
-              <Row fillWidth gap="12" vertical="center">
-                <Line background="neutral-alpha-medium" />
-                <Text
-                  variant="label-default-s"
-                  onBackground="neutral-medium"
-                  style={{ whiteSpace: "nowrap", flexShrink: 0 }}
-                >
-                  New facility?
-                </Text>
-                <Line background="neutral-alpha-medium" />
-              </Row>
-
-              <Button
-                variant="secondary"
-                size="l"
-                fillWidth
-                onClick={() => setShowAccessModal(true)}
-              >
-                Request Platform Access
-              </Button>
-
-              <Text
-                variant="body-default-s"
-                onBackground="neutral-weak"
-                align="center"
-                style={{ maxWidth: "320px" }}
-              >
-                Submit your PHC/CHC establishment documents for verification to gain dashboard access.
-              </Text>
-            </Column>
           </RevealFx>
         </Column>
       </Column>
 
-      {/* Request Access Modal */}
-      <RequestAccessModal
-        isOpen={showAccessModal}
-        onClose={() => setShowAccessModal(false)}
-      />
+      {/* Two Portal Cards */}
+      <RevealFx translateY="12" delay={0.2} fillWidth>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gap: "24px",
+            width: "100%",
+            maxWidth: "780px",
+            margin: "0 auto",
+          }}
+        >
+          {/* Hospital Login Card */}
+          <Column
+            padding="32"
+            background="surface"
+            border="neutral-alpha-weak"
+            radius="l"
+            gap="20"
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              cursor: "pointer",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "4px",
+                background: "linear-gradient(90deg, #10b981, #06b6d4)",
+              }}
+            />
+            <Row gap="16" vertical="center" paddingTop="4">
+              <div
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "14px",
+                  background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.15))",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "24px",
+                }}
+              >
+                🏥
+              </div>
+              <Column gap="2">
+                <Heading variant="heading-strong-m">Hospital Login</Heading>
+                <Text variant="label-default-s" onBackground="neutral-medium">PHC / CHC Staff</Text>
+              </Column>
+            </Row>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              Access your facility&apos;s management dashboard to track stocks, patients, beds, and staff.
+            </Text>
+            <Button
+              id="login-hospital-btn"
+              variant="primary"
+              size="l"
+              fillWidth
+              arrowIcon
+              href="/login/hospital"
+            >
+              Hospital Sign In
+            </Button>
+          </Column>
+
+          {/* Admin Login Card */}
+          <Column
+            padding="32"
+            background="surface"
+            border="neutral-alpha-weak"
+            radius="l"
+            gap="20"
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              cursor: "pointer",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "4px",
+                background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
+              }}
+            />
+            <Row gap="16" vertical="center" paddingTop="4">
+              <div
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "14px",
+                  background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "24px",
+                }}
+              >
+                🏛️
+              </div>
+              <Column gap="2">
+                <Heading variant="heading-strong-m">Administrator Login</Heading>
+                <Text variant="label-default-s" onBackground="neutral-medium">District Officials</Text>
+              </Column>
+            </Row>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              Monitor all health centres across the district, review join requests, and manage resources.
+            </Text>
+            <Button
+              id="login-admin-btn"
+              variant="primary"
+              size="l"
+              fillWidth
+              arrowIcon
+              href="/login/admin"
+            >
+              Admin Sign In
+            </Button>
+          </Column>
+        </div>
+      </RevealFx>
+
+      {/* Back Link */}
+      <RevealFx translateY="16" delay={0.3} fillWidth horizontal="center">
+        <Button variant="tertiary" size="s" href="/" prefixIcon="arrowLeft">
+          Back to Home
+        </Button>
+      </RevealFx>
     </Column>
   );
 }

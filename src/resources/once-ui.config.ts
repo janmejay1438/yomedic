@@ -19,7 +19,10 @@ const baseURL: string = "https://yomedic.com";
 const routes: RoutesConfig = {
   "/": true,
   "/login": true,
+  "/login/hospital": true,
+  "/login/admin": true,
   "/dashboard": true,
+  "/dashboard/hospital": true,
   "/admin/verify-requests": true,
 };
 
