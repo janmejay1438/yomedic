@@ -1,0 +1,81 @@
+// Prisma schema for the Hospital Management System — Room & Bed module.
+// Learn more: https://pris.ly/d/prisma-schema
+//
+// NOTE (Prisma 7): the datasource `url` lives in `prisma.config.ts`, and the
+// runtime connection is provided to `PrismaClient` via a driver adapter
+// (@prisma/adapter-better-sqlite3). See `src/lib/prisma.ts`.
+//
+// SQLite has no native enum type, so status columns are modelled as `String`.
+// The allowed values are centralised in `src/lib/rooms.ts` (RoomStatus / BedStatus).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// A type/tier of room (e.g. "Single Bed Rooms"). Aggregates live capacity
+/// counters that are kept in sync whenever the underlying beds change.
+model RoomCategory {
+  id                  String   @id @default(cuid())
+  roomType            String   @unique
+  totalRooms          Int
+  bedsPerRoom         Int
+  totalBeds           Int
+  occupiedBeds        Int      @default(0)
+  availableBeds       Int
+  occupancyPercentage Float    @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  rooms Room[]
+}
+
+/// A physical room belonging to a RoomCategory. One room has many beds.
+model Room {
+  id         String @id @default(cuid())
+  categoryId String
+  roomNumber String
+  status     String @default("Available") // Available | Occupied | Cleaning | Maintenance
+
+  category RoomCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  beds     Bed[]
+
+  @@unique([categoryId, roomNumber])
+  @@index([categoryId])
+}
+
+/// An individual bed inside a Room. Optionally linked to an admitted patient.
+model Bed {
+  id          String   @id @default(cuid())
+  roomId      String
+  bedNumber   String
+  status      String   @default("Available") // Available | Occupied | Cleaning | Maintenance
+  patientName String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  // @default(now()) backfills existing rows when this column is added.
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, bedNumber])
+  @@index([roomId])
+}
+
+model Query {
+  id           String   @id @default(cuid())
+  hospitalId   String
+  hospitalName String
+  subject      String
+  message      String
+  priority     String   // Low | Medium | High | Emergency
+  status       String   @default("Pending") // Pending | In Progress | Resolved
+  reply        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+

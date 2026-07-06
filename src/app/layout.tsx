@@ -47,6 +47,7 @@ export default async function RootLayout({
       <head>
         <script
           id="theme-init"
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               (function() {

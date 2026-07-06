@@ -36,3 +36,9 @@ yarn-error.log*
 next-env.d.ts
 
 yomedic-17009-firebase-adminsdk-fbsvc-fc63520304.json
+/src/generated/prisma
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal

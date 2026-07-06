@@ -23,6 +23,7 @@ const routes: RoutesConfig = {
   "/login/admin": true,
   "/dashboard": true,
   "/dashboard/hospital": true,
+  "/dashboard/rooms": true,
   "/admin/verify-requests": true,
 };
 

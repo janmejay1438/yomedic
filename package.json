@@ -7,7 +7,11 @@
     "build": "next build",
     "biome-write": "npx @biomejs/biome format --write .",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset --force"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.0",
@@ -27,7 +31,12 @@
     "react-icons": "^5.5.0",
     "resend": "^6.16.0",
     "sass": "^1.86.3",
-    "transliteration": "^2.3.5"
+    "transliteration": "^2.3.5",
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "better-sqlite3": "^12.11.1",
+    "prisma": "^7.8.0",
+    "sqlite3": "^6.0.1"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -37,7 +46,8 @@
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.25.0",
     "typescript": "^5.8.3",
-    "tzdata": "^1.0.44"
+    "tzdata": "^1.0.44",
+    "tsx": "^4.23.0"
   },
   "overrides": {
     "jose": "^4.15.5"

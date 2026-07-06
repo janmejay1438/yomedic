@@ -11,8 +11,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY!);
+// Resend is initialized lazily inside the handler (only when an API key is
+// present) so that importing this route during `next build` never throws when
+// RESEND_API_KEY is unset — email is optional and already guarded below.
 
 
 export async function POST(req: Request) {
@@ -90,6 +91,7 @@ export async function POST(req: Request) {
     // STEP 4: Automated Email Notification
     try {
       if (process.env.RESEND_API_KEY) {
+        const resend = new Resend(process.env.RESEND_API_KEY);
         await resend.emails.send({
           from: 'Yomedic Admin <no-reply@yomedic.com>', // Ensure domain is verified in Resend
           to: contactEmail,

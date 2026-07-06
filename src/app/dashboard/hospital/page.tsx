@@ -14,16 +14,65 @@ import {
   RevealFx,
   Badge,
   Line,
+  useToast,
 } from "@once-ui-system/core";
+// Room & Bed component imports removed
 
+// ── Types ───────────────────────────────────────────────────────────────────
 type JoinStatus = "not_submitted" | "pending" | "approved" | "rejected" | "loading";
 
+interface DbQuery {
+  id: string;
+  hospitalId: string;
+  hospitalName: string;
+  subject: string;
+  message: string;
+  priority: string;
+  status: string;
+  reply: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const PRIORITIES = ["Low", "Medium", "High", "Emergency"] as const;
+
+// ── Status Badge Color Helper ───────────────────────────────────────────────
+function statusBadgeStyle(status: string) {
+  switch (status) {
+    case "Pending":     return { background: "#f59e0b", color: "#000" };
+    case "In Progress": return { background: "#3b82f6", color: "#fff" };
+    case "Resolved":    return { background: "#10b981", color: "#fff" };
+    default:            return { background: "rgba(255,255,255,0.1)", color: "#fff" };
+  }
+}
+
+function priorityBadgeStyle(priority: string) {
+  switch (priority) {
+    case "Emergency": return { background: "#ef4444", color: "#fff" };
+    case "High":      return { background: "#f97316", color: "#fff" };
+    case "Medium":    return { background: "#f59e0b", color: "#000" };
+    default:          return { background: "#6b7280", color: "#fff" };
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── Main Component ──────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
 export default function HospitalDashboard() {
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [joinStatus, setJoinStatus] = useState<JoinStatus>("loading");
+  // Room capacity state removed
+  const [querySubject, setQuerySubject] = useState("");
+  const [queryText, setQueryText] = useState("");
+  const [queryPriority, setQueryPriority] = useState<string>("Medium");
+  const [submittingQuery, setSubmittingQuery] = useState(false);
+  const [dbQueries, setDbQueries] = useState<DbQuery[]>([]);
+  const [loadingQueries, setLoadingQueries] = useState(false);
   const router = useRouter();
+  const { addToast } = useToast();
 
+  // ── Auth ────────────────────────────────────────────────────────────────
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -33,14 +82,12 @@ export default function HospitalDashboard() {
         router.push("/login/hospital");
       }
     });
-
     return () => unsubscribe();
   }, [router]);
 
-  // Check if this user's facility has an existing join request
+  // ── Join status ─────────────────────────────────────────────────────────
   const checkJoinStatus = useCallback(async () => {
     if (!user?.email) return;
-
     try {
       const { data, error } = await supabase
         .from("access_requests")
@@ -54,7 +101,6 @@ export default function HospitalDashboard() {
         setJoinStatus("not_submitted");
         return;
       }
-
       if (data && data.length > 0) {
         setJoinStatus(data[0].status as JoinStatus);
       } else {
@@ -66,16 +112,77 @@ export default function HospitalDashboard() {
   }, [user?.email]);
 
   useEffect(() => {
-    if (!loadingAuth && user) {
-      checkJoinStatus();
-    }
+    if (!loadingAuth && user) checkJoinStatus();
   }, [loadingAuth, user, checkJoinStatus]);
+
+  // Room capacity load hook removed
+
+  // ── Load this hospital's queries from DB ─────────────────────────────────
+  const loadDbQueries = useCallback(async (uid: string) => {
+    setLoadingQueries(true);
+    try {
+      const res = await fetch(`/api/queries?hospitalId=${encodeURIComponent(uid)}`, {
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (res.ok) setDbQueries(json.data as DbQuery[]);
+    } catch (err) {
+      console.error("Failed to load queries:", err);
+    } finally {
+      setLoadingQueries(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!loadingAuth && user) loadDbQueries(user.uid);
+  }, [loadingAuth, user, loadDbQueries]);
 
   const handleSignOut = async () => {
     await signOut(auth);
     router.push("/login/hospital");
   };
 
+  // ── Send Query handler ─────────────────────────────────────────────────
+  const handleSendQuery = async () => {
+    if (!querySubject.trim()) {
+      addToast({ variant: "danger", message: "Please enter a subject." });
+      return;
+    }
+    if (!queryText.trim()) {
+      addToast({ variant: "danger", message: "Please describe your query." });
+      return;
+    }
+    if (!user) return;
+
+    setSubmittingQuery(true);
+    try {
+      const res = await fetch("/api/queries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hospitalId: user.uid,
+          hospitalName: user.displayName || user.email || user.uid,
+          subject: querySubject.trim(),
+          message: queryText.trim(),
+          priority: queryPriority,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to submit.");
+
+      setDbQueries((prev) => [json.data as DbQuery, ...prev]);
+      setQuerySubject("");
+      setQueryText("");
+      setQueryPriority("Medium");
+      addToast({ variant: "success", message: "Query sent successfully to District Administration." });
+    } catch (err: any) {
+      addToast({ variant: "danger", message: err.message || "Could not send query." });
+    } finally {
+      setSubmittingQuery(false);
+    }
+  };
+
+  // ── Loading state ───────────────────────────────────────────────────────
   if (loadingAuth) {
     return (
       <Column fillWidth style={{ minHeight: "100vh" }} vertical="center" horizontal="center">
@@ -92,7 +199,15 @@ export default function HospitalDashboard() {
       gap="32"
       style={{ maxWidth: "1200px", margin: "0 auto", minHeight: "100vh" }}
     >
-      {/* Dashboard Header */}
+      {/* ── Keyframe animations (injected once) ──────────────────────────── */}
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(24px) } to { opacity: 1; transform: translateY(0) } }
+      `}</style>
+
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* Dashboard Header — UNCHANGED                                      */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
       <RevealFx translateY="4" fillWidth>
         <Row horizontal="between" vertical="center" fillWidth paddingBottom="16">
           <Column gap="8">
@@ -114,7 +229,7 @@ export default function HospitalDashboard() {
               <Column gap="2">
                 <Heading variant="display-strong-s">Facility Dashboard</Heading>
                 <Text variant="body-default-m" onBackground="neutral-weak">
-                  PHC/CHC Operations & Management
+                  PHC/CHC Operations &amp; Management
                 </Text>
               </Column>
             </Row>
@@ -131,7 +246,9 @@ export default function HospitalDashboard() {
         <Line background="neutral-alpha-medium" />
       </RevealFx>
 
-      {/* Join District Dashboard Section */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* District Dashboard Connection — UNCHANGED                         */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
       <RevealFx translateY="8" delay={0.1} fillWidth>
         <Row
           fillWidth
@@ -201,10 +318,7 @@ export default function HospitalDashboard() {
               size="m"
               weight="strong"
               href="/login/hospital"
-              onClick={() => {
-                // Navigate to hospital login which has the RequestAccessModal
-                // In a real app this would open the modal directly
-              }}
+              onClick={() => {}}
             >
               Request to Join
             </Button>
@@ -217,151 +331,317 @@ export default function HospitalDashboard() {
         </Row>
       </RevealFx>
 
-      {/* Quick Stats Grid */}
-      <RevealFx translateY="12" delay={0.2} fillWidth>
-        <div
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* Send Query to District Administration                             */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      <RevealFx translateY="12" delay={0.15} fillWidth>
+        <Column
+          fillWidth
+          padding="32"
+          gap="20"
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: "20px",
-            width: "100%",
+            background: "var(--surface-background)",
+            border: "1px solid var(--neutral-border-medium)",
+            borderRadius: "20px",
+            position: "relative",
+            overflow: "hidden",
           }}
         >
-          {/* Stock Levels */}
-          <Column
-            padding="24"
-            background="surface"
-            border="neutral-alpha-weak"
-            radius="l"
-            gap="16"
-            style={{ position: "relative", overflow: "hidden" }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "3px",
-                background: "linear-gradient(90deg, #f59e0b, #f97316)",
-              }}
-            />
-            <Row horizontal="between" vertical="center" paddingTop="4">
-              <Text variant="heading-strong-m">Stock Levels</Text>
-              <Badge background="warning-medium" textVariant="label-strong-s">LOW</Badge>
-            </Row>
-            <Column gap="4">
-              <Text variant="display-strong-m" onBackground="warning-strong">72%</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">Essential medicine availability</Text>
-            </Column>
-            <Line background="neutral-alpha-weak" />
-            <Text variant="label-default-s" onBackground="brand-medium" style={{ cursor: "pointer" }}>
-              Update Inventory →
-            </Text>
-          </Column>
+          {/* accent top bar */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "3px",
+              background: "linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7)",
+            }}
+          />
 
-          {/* Patient Footfall */}
-          <Column
-            padding="24"
-            background="surface"
-            border="neutral-alpha-weak"
-            radius="l"
-            gap="16"
-            style={{ position: "relative", overflow: "hidden" }}
-          >
+          <Row gap="12" vertical="center" paddingTop="4">
             <div
               style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "3px",
-                background: "linear-gradient(90deg, #10b981, #06b6d4)",
+                width: "42px",
+                height: "42px",
+                borderRadius: "12px",
+                background: "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15))",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "20px",
               }}
-            />
-            <Row horizontal="between" vertical="center" paddingTop="4">
-              <Text variant="heading-strong-m">Today&apos;s Patients</Text>
-              <Badge background="success-medium" textVariant="label-strong-s">LIVE</Badge>
-            </Row>
-            <Column gap="4">
-              <Text variant="display-strong-m" onBackground="success-strong">84</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">Patients processed today</Text>
+            >
+              📨
+            </div>
+            <Column gap="2">
+              <Heading variant="heading-strong-l">Need Assistance?</Heading>
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                Send your queries, requests, complaints, or resource requirements directly to the District Administration.
+              </Text>
             </Column>
-            <Line background="neutral-alpha-weak" />
-            <Text variant="label-default-s" onBackground="brand-medium" style={{ cursor: "pointer" }}>
-              Log Patient Visit →
-            </Text>
-          </Column>
+          </Row>
 
-          {/* Bed Occupancy */}
-          <Column
-            padding="24"
-            background="surface"
-            border="neutral-alpha-weak"
-            radius="l"
-            gap="16"
-            style={{ position: "relative", overflow: "hidden" }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "3px",
-                background: "linear-gradient(90deg, #ef4444, #f97316)",
-              }}
-            />
-            <Row horizontal="between" vertical="center" paddingTop="4">
-              <Text variant="heading-strong-m">Bed Occupancy</Text>
-              <Badge background="danger-medium" textVariant="label-strong-s">HIGH</Badge>
-            </Row>
-            <Column gap="4">
-              <Text variant="display-strong-m" onBackground="danger-strong">18 / 20</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">Beds currently occupied</Text>
-            </Column>
-            <Line background="neutral-alpha-weak" />
-            <Text variant="label-default-s" onBackground="brand-medium" style={{ cursor: "pointer" }}>
-              Manage Beds →
-            </Text>
-          </Column>
+          <textarea
+            value={querySubject}
+            onChange={(e) => setQuerySubject(e.target.value)}
+            placeholder="Query subject (e.g. Oxygen Cylinder Request)"
+            rows={1}
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              borderRadius: "14px",
+              border: "1px solid var(--neutral-border-medium)",
+              background: "rgba(255,255,255,0.03)",
+              color: "var(--neutral-on-background-strong)",
+              fontSize: "15px",
+              fontFamily: "inherit",
+              resize: "none",
+              outline: "none",
+              transition: "border-color 0.2s",
+            }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#6366f1")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--neutral-border-medium)")}
+          />
 
-          {/* Staff Present */}
-          <Column
-            padding="24"
-            background="surface"
-            border="neutral-alpha-weak"
-            radius="l"
-            gap="16"
-            style={{ position: "relative", overflow: "hidden" }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: "3px",
-                background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
-              }}
-            />
-            <Row horizontal="between" vertical="center" paddingTop="4">
-              <Text variant="heading-strong-m">Staff Present</Text>
-              <Badge background="brand-medium" textVariant="label-strong-s">NORMAL</Badge>
-            </Row>
-            <Column gap="4">
-              <Text variant="display-strong-m" onBackground="brand-strong">7 / 8</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">Doctors & staff on duty</Text>
-            </Column>
-            <Line background="neutral-alpha-weak" />
-            <Text variant="label-default-s" onBackground="brand-medium" style={{ cursor: "pointer" }}>
-              Mark Attendance →
-            </Text>
-          </Column>
-        </div>
+          {/* Priority selector */}
+          <Row gap="8" vertical="center">
+            <Text variant="label-strong-s" onBackground="neutral-weak" style={{ minWidth: 80 }}>Priority:</Text>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              {PRIORITIES.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setQueryPriority(p)}
+                  style={{
+                    padding: "6px 14px",
+                    borderRadius: "20px",
+                    border: queryPriority === p ? "2px solid #6366f1" : "1px solid rgba(255,255,255,0.15)",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: queryPriority === p ? 700 : 400,
+                    transition: "all 0.15s",
+                    ...priorityBadgeStyle(p),
+                    opacity: queryPriority === p ? 1 : 0.55,
+                  }}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </Row>
+
+          <textarea
+            value={queryText}
+            onChange={(e) => setQueryText(e.target.value)}
+            placeholder={`Describe your query in detail...\nExample: "We require 20 additional oxygen cylinders urgently."`}
+            rows={4}
+            style={{
+              width: "100%",
+              padding: "16px",
+              borderRadius: "14px",
+              border: "1px solid var(--neutral-border-medium)",
+              background: "rgba(255,255,255,0.03)",
+              color: "var(--neutral-on-background-strong)",
+              fontSize: "15px",
+              fontFamily: "inherit",
+              resize: "vertical",
+              outline: "none",
+              transition: "border-color 0.2s",
+            }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#6366f1")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--neutral-border-medium)")}
+          />
+
+          <Row gap="12">
+            <Button
+              variant="primary"
+              size="m"
+              weight="strong"
+              onClick={handleSendQuery}
+              // disabled prop type might not support boolean directly
+            >
+              {submittingQuery ? "Sending…" : "Send Query"}
+            </Button>
+            <Button
+              variant="secondary"
+              size="m"
+              onClick={() => { setQuerySubject(""); setQueryText(""); setQueryPriority("Medium"); }}
+            >
+              Clear
+            </Button>
+          </Row>
+        </Column>
       </RevealFx>
 
-      {/* Quick Actions */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* My Submitted Queries                                               */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      <RevealFx translateY="12" delay={0.2} fillWidth>
+        <Column
+          fillWidth
+          padding="32"
+          gap="20"
+          style={{
+            background: "var(--surface-background)",
+            border: "1px solid var(--neutral-border-medium)",
+            borderRadius: "20px",
+          }}
+        >
+          <Heading variant="heading-strong-l">My Submitted Queries</Heading>
+
+          {loadingQueries ? (
+            <Text variant="body-default-m" onBackground="neutral-weak">Loading queries…</Text>
+          ) : dbQueries.length === 0 ? (
+            <Text variant="body-default-m" onBackground="neutral-weak">
+              No queries submitted yet. Use the form above to send your first query.
+            </Text>
+          ) : (
+            <>
+              {/* Table header */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "2fr 1fr 1fr 2fr 1fr",
+                  gap: "8px",
+                  padding: "10px 16px",
+                  borderRadius: "12px",
+                  background: "rgba(255,255,255,0.04)",
+                }}
+              >
+                {["Subject", "Priority", "Status", "District Reply", "Date"].map((h) => (
+                  <Text key={h} variant="label-strong-s" onBackground="neutral-weak">{h}</Text>
+                ))}
+              </div>
+
+              {/* Rows */}
+              <Column gap="8">
+                {dbQueries.map((q) => (
+                  <div
+                    key={q.id}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "2fr 1fr 1fr 2fr 1fr",
+                      gap: "8px",
+                      alignItems: "center",
+                      padding: "14px 16px",
+                      borderRadius: "12px",
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid rgba(255,255,255,0.04)",
+                    }}
+                  >
+                    <Text variant="body-default-s" onBackground="neutral-strong">{q.subject}</Text>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "3px 10px",
+                        borderRadius: "20px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        ...priorityBadgeStyle(q.priority),
+                      }}
+                    >
+                      {q.priority}
+                    </span>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "3px 10px",
+                        borderRadius: "20px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        ...statusBadgeStyle(q.status),
+                      }}
+                    >
+                      {q.status}
+                    </span>
+                    <Text variant="body-default-s" onBackground="neutral-medium">
+                      {q.reply ?? <span style={{ opacity: 0.4 }}>Awaiting reply…</span>}
+                    </Text>
+                    <Text variant="label-default-s" onBackground="neutral-weak">
+                      {new Date(q.createdAt).toLocaleDateString("en-GB", {
+                        day: "2-digit", month: "short", year: "numeric",
+                      })}
+                    </Text>
+                  </div>
+                ))}
+              </Column>
+            </>
+          )}
+        </Column>
+      </RevealFx>
+
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* Bed / Room Availability                                           */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      <RevealFx translateY="12" delay={0.25} fillWidth>
+        <Column
+          fillWidth
+          padding="32"
+          gap="20"
+          style={{
+            background: "var(--surface-background)",
+            border: "1px solid var(--neutral-border-medium)",
+            borderRadius: "20px",
+            position: "relative",
+            overflow: "hidden",
+            cursor: "pointer",
+            transition: "transform 0.2s, box-shadow 0.2s",
+          }}
+          onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
+            e.currentTarget.style.transform = "translateY(-2px)";
+            e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.15)";
+          }}
+          onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "none";
+          }}
+          onClick={() => router.push("/dashboard/rooms")}
+        >
+          {/* accent top bar */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: "3px",
+              background: "linear-gradient(90deg, #10b981, #06b6d4)",
+            }}
+          />
+
+          <Row gap="16" vertical="center" paddingTop="4" horizontal="between" fillWidth>
+            <Row gap="16" vertical="center">
+              <div
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "14px",
+                  background: "linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.15))",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "24px",
+                }}
+              >
+                🛏️
+              </div>
+              <Column gap="4">
+                <Heading variant="heading-strong-l">Bed / Room Availability</Heading>
+                <Text variant="body-default-m" onBackground="neutral-weak">
+                  Monitor live ward counts, patient occupancy percentages, and bed assignments.
+                </Text>
+              </Column>
+            </Row>
+            <Button variant="secondary" size="m">
+              View Rooms &amp; Beds →
+            </Button>
+          </Row>
+        </Column>
+      </RevealFx>
+
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* Quick Actions — UNCHANGED                                         */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
       <RevealFx translateY="16" delay={0.3} fillWidth>
         <Column padding="32" background="surface" border="neutral-alpha-weak" radius="l" gap="24">
           <Heading variant="heading-strong-l">Quick Actions</Heading>
@@ -389,7 +669,9 @@ export default function HospitalDashboard() {
         </Column>
       </RevealFx>
 
-      {/* Recent Activity */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
+      {/* Recent Activity — UNCHANGED                                       */}
+      {/* ══════════════════════════════════════════════════════════════════ */}
       <RevealFx translateY="20" delay={0.4} fillWidth>
         <Column padding="32" background="surface" border="neutral-alpha-weak" radius="l" gap="20">
           <Row horizontal="between" vertical="center">
@@ -430,6 +712,8 @@ export default function HospitalDashboard() {
           </Column>
         </Column>
       </RevealFx>
+
+      {/* Room Detail Modal removed from dashboard */}
     </Column>
   );
 }
