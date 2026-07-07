@@ -1,0 +1,120 @@
+.tableContainer {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--neutral-alpha-weak);
+  border-radius: 16px;
+  background: var(--surface-background);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.table th {
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--neutral-on-background-weak);
+  background: var(--neutral-alpha-weak);
+  border-bottom: 1px solid var(--neutral-alpha-medium);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 16px 18px;
+  font-size: 14px;
+  color: var(--neutral-on-background-strong);
+  border-bottom: 1px solid var(--neutral-alpha-weak);
+  vertical-align: middle;
+}
+
+.table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background: var(--neutral-alpha-weak);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.inputField {
+  width: 100%;
+  max-width: 160px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--neutral-alpha-medium);
+  background: var(--neutral-alpha-weak);
+  color: var(--neutral-on-background-strong);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inputField:focus {
+  border-color: var(--brand-border-strong);
+  box-shadow: 0 0 0 2px var(--brand-alpha-weak);
+}
+
+.inputField:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actionCell {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.errorText {
+  color: var(--danger-on-background-strong);
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 300px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--neutral-alpha-medium);
+  border-top-color: var(--brand-background-strong);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.bloodBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: 700;
+  background: var(--danger-alpha-weak);
+  color: var(--danger-on-background-strong);
+  border: 1px solid var(--danger-alpha-medium);
+}

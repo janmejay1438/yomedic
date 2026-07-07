@@ -1,0 +1,50 @@
+{
+  "name": "yomedic",
+  "version": "2.3.0",
+  "scripts": {
+    "dev": "next dev",
+    "export": "next export",
+    "build": "next build",
+    "biome-write": "npx @biomejs/biome format --write .",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@mdx-js/loader": "^3.1.0",
+    "@next/mdx": "^16.0.10",
+    "@once-ui-system/core": "latest",
+    "@prisma/client": "^6.19.3",
+    "@supabase/supabase-js": "^2.108.2",
+    "better-sqlite3": "^12.11.1",
+    "classnames": "^2.5.1",
+    "cookie": "^1.0.2",
+    "firebase": "^12.15.0",
+    "firebase-admin": "^14.1.0",
+    "gray-matter": "^4.0.3",
+    "lint-staged": "^16.1.5",
+    "next": "^16.0.10",
+    "next-intl": "^4.13.1",
+    "next-mdx-remote": "^6.0.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.3",
+    "react-icons": "^5.5.0",
+    "resend": "^6.16.0",
+    "sass": "^1.86.3",
+    "transliteration": "^2.3.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/cookie": "^0.6.0",
+    "@types/node": "^20.17.30",
+    "@types/react": "^19.2.4",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.25.0",
+    "prisma": "^6.19.3",
+    "typescript": "^5.8.3",
+    "tzdata": "^1.0.44"
+  },
+  "overrides": {
+    "jose": "^4.15.5"
+  }
+}
