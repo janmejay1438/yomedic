@@ -300,3 +300,56 @@ export async function PATCH(
     );
   }
 }
+
+/**
+ * DELETE /api/rooms/[categoryId]
+ * Delete a room category and all its nested rooms and beds.
+ * Only allowed if no beds in the category are currently occupied.
+ */
+export async function DELETE(
+  _request: Request,
+  context: any
+) {
+  try {
+    const resolvedParams = await context.params;
+    const categoryId = resolvedParams?.categoryId;
+
+    if (!categoryId) {
+      return NextResponse.json({ error: "Category ID is required." }, { status: 400 });
+    }
+
+    const category = await prisma.roomCategory.findUnique({
+      where: { id: categoryId },
+      include: {
+        rooms: {
+          include: { beds: true }
+        }
+      }
+    });
+
+    if (!category) {
+      return NextResponse.json({ error: "Room category not found." }, { status: 404 });
+    }
+
+    const occupiedCount = category.rooms.reduce((acc, r) => {
+      return acc + r.beds.filter((b) => b.status === "Occupied").length;
+    }, 0);
+
+    if (occupiedCount > 0) {
+      return NextResponse.json(
+        { error: `Cannot delete room category "${category.roomType}" because it has ${occupiedCount} occupied bed(s). Please discharge or move the patients first.` },
+        { status: 400 }
+      );
+    }
+
+    await prisma.roomCategory.delete({
+      where: { id: categoryId }
+    });
+
+    return NextResponse.json({ message: "Room category deleted successfully." }, { status: 200 });
+  } catch (err: any) {
+    console.error("[api/rooms/:id DELETE] Failed to delete room category:", err);
+    return NextResponse.json({ error: err.message || "Failed to delete room category." }, { status: 500 });
+  }
+}
+

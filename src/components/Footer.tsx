@@ -18,7 +18,7 @@ export const Footer = () => {
         s={{
           direction: "column",
           horizontal: "center",
-          align: "center",
+          vertical: "center",
         }}
       >
         <Text variant="body-default-s" onBackground="neutral-strong">

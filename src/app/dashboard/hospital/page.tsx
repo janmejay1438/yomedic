@@ -69,6 +69,8 @@ export default function HospitalDashboard() {
   const [staffPresent, setStaffPresent] = useState<number | null>(null);
   const [staffTotal, setStaffTotal] = useState<number | null>(null);
   const [medicineAvailability, setMedicineAvailability] = useState<number | null>(null);
+  const [totalBeds, setTotalBeds] = useState<number | null>(null);
+  const [occupiedBeds, setOccupiedBeds] = useState<number | null>(null);
   const [querySubject, setQuerySubject] = useState("");
   const [queryText, setQueryText] = useState("");
   const [queryPriority, setQueryPriority] = useState<string>("Medium");
@@ -188,6 +190,17 @@ export default function HospitalDashboard() {
             const pct = Math.round((greenCount / medData.length) * 100);
             setMedicineAvailability(pct);
           }
+        }
+      }
+      const roomsRes = await fetch("/api/rooms");
+      if (roomsRes.ok) {
+        const roomsJson = await roomsRes.json();
+        const cats = roomsJson.data;
+        if (Array.isArray(cats)) {
+          const tot = cats.reduce((acc, c) => acc + (c.totalBeds || 0), 0);
+          const occ = cats.reduce((acc, c) => acc + (c.occupiedBeds || 0), 0);
+          setTotalBeds(tot);
+          setOccupiedBeds(occ);
         }
       }
     } catch (err) {
@@ -549,14 +562,40 @@ export default function HospitalDashboard() {
             />
             <Row horizontal="between" vertical="center" paddingTop="4">
               <Text variant="heading-strong-m">{t("bedOccupancy")}</Text>
-              <Badge background="danger-medium" textVariant="label-strong-s">HIGH</Badge>
+              {(() => {
+                if (totalBeds === null || occupiedBeds === null || totalBeds === 0) {
+                  return <Badge background="neutral-alpha-medium" textVariant="label-strong-s">{t("loading")}</Badge>;
+                }
+                const pct = (occupiedBeds / totalBeds) * 100;
+                if (pct >= 85) return <Badge background="danger-medium" textVariant="label-strong-s">HIGH</Badge>;
+                if (pct >= 50) return <Badge background="warning-medium" textVariant="label-strong-s">MEDIUM</Badge>;
+                return <Badge background="success-medium" textVariant="label-strong-s">LOW</Badge>;
+              })()}
             </Row>
             <Column gap="4">
-              <Text variant="display-strong-m" onBackground="danger-strong">18 / 20</Text>
+              <Text
+                variant="display-strong-m"
+                onBackground={
+                  totalBeds === null || occupiedBeds === null || totalBeds === 0
+                    ? "neutral-strong"
+                    : (occupiedBeds / totalBeds) * 100 >= 85
+                    ? "danger-strong"
+                    : (occupiedBeds / totalBeds) * 100 >= 50
+                    ? "warning-strong"
+                    : "success-strong"
+                }
+              >
+                {occupiedBeds !== null && totalBeds !== null ? `${occupiedBeds} / ${totalBeds}` : "... / ..."}
+              </Text>
               <Text variant="body-default-s" onBackground="neutral-weak">{t("bedsCurrentlyOccupied")}</Text>
             </Column>
             <Line background="neutral-alpha-weak" />
-            <Text variant="label-default-s" onBackground="brand-medium" style={{ cursor: "pointer" }}>
+            <Text
+              variant="label-default-s"
+              onBackground="brand-medium"
+              style={{ cursor: "pointer" }}
+              onClick={() => router.push("/dashboard/rooms")}
+            >
               {t("manageBeds")}
             </Text>
           </Column>

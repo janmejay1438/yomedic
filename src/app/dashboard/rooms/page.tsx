@@ -18,6 +18,7 @@ import {
   RoomCategoryCard,
   RoomCategoryModal,
   EditRoomCategoryModal,
+  AddRoomCategoryModal,
 } from "@/components/rooms";
 import type { RoomCategoryDTO } from "@/components/rooms";
 
@@ -35,6 +36,7 @@ export default function RoomsManagementPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editing, setEditing] = useState<RoomCategoryDTO | null>(null);
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
 
   // ── Auth guard (same pattern as the facility dashboard) ───────────────────
   useEffect(() => {
@@ -188,12 +190,17 @@ export default function RoomsManagementPage() {
       <RevealFx translateY="12" delay={0.15} fillWidth>
         <Column fillWidth gap="20">
           <Row horizontal="between" vertical="center">
-            <Heading variant="heading-strong-l">Room Categories</Heading>
-            {!loadingData && (
-              <Badge background="brand-alpha-medium" textVariant="label-strong-s" paddingX="12" paddingY="4">
-                {categories.length} categories
-              </Badge>
-            )}
+            <Row gap="12" vertical="center">
+              <Heading variant="heading-strong-l">Room Categories</Heading>
+              {!loadingData && (
+                <Badge background="brand-alpha-medium" textVariant="label-strong-s" paddingX="12" paddingY="4">
+                  {categories.length} categories
+                </Badge>
+              )}
+            </Row>
+            <Button id="add-category-btn" variant="primary" size="s" onClick={() => setIsAddingCategory(true)}>
+              + Add Category
+            </Button>
           </Row>
 
           {loadingData ? (
@@ -253,6 +260,14 @@ export default function RoomsManagementPage() {
           category={editing}
           onClose={() => setEditing(null)}
           onSaved={applyUpdatedCategory}
+        />
+      )}
+
+      {/* Add modal */}
+      {isAddingCategory && (
+        <AddRoomCategoryModal
+          onClose={() => setIsAddingCategory(false)}
+          onSaved={loadCategories}
         />
       )}
     </Column>

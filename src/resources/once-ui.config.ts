@@ -28,13 +28,13 @@ const routes: RoutesConfig = {
   "/dashboard/hospital/patients": true,
   "/dashboard/hospital/attendance": true,
   "/dashboard/hospital/medicines": true,
-  "/dashboard/hospital/rooms": true,
+  "/dashboard/rooms": true,
 
   "/admin/verify-requests": true,
 };
 
 const display: DisplayConfig = {
-  location: true,
+  location: false,
   time: true,
   themeSwitcher: true,
 };

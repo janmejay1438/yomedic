@@ -40,6 +40,41 @@ export function RoomCategoryModal({
   const [detail, setDetail] = useState<RoomCategoryDetailDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingBed, setEditingBed] = useState<{ bed: BedDTO; roomNumber: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (stats.occupied > 0) {
+      addToast({
+        variant: "danger",
+        message: "Cannot delete a category with occupied beds. Please discharge patients first.",
+      });
+      return;
+    }
+    if (!window.confirm(`Are you sure you want to delete the "${detail?.roomType || "selected"}" category? This will delete all its rooms and beds permanently.`)) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/rooms/${categoryId}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to delete");
+      addToast({
+        variant: "success",
+        message: "Room category deleted successfully.",
+      });
+      onUpdated?.();
+      onClose();
+    } catch (err: any) {
+      addToast({
+        variant: "danger",
+        message: err.message || "Failed to delete room category.",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -291,9 +326,20 @@ export function RoomCategoryModal({
               })}
             </Column>
 
-            <Button variant="secondary" size="m" fillWidth onClick={onClose}>
-              Close
-            </Button>
+            <Row gap="12" fillWidth>
+              <Button
+                variant="secondary"
+                size="m"
+                style={{ border: "1px solid rgba(239, 68, 68, 0.3)", background: "rgba(239, 68, 68, 0.1)", color: "#ef4444" }}
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting…" : "Delete Category"}
+              </Button>
+              <Button variant="secondary" size="m" style={{ flex: 1 }} onClick={onClose}>
+                Close
+              </Button>
+            </Row>
           </>
         )}
       </Column>

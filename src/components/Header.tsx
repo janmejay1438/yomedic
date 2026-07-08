@@ -102,26 +102,18 @@ export const Header = () => {
             zIndex={1}
           >
             <Row gap="4" vertical="center" textVariant="body-default-s" suppressHydrationWarning>
-              {routes["/"] && (
+              {!isLoggedIn && routes["/"] && (
                 <ToggleButton prefixIcon="home" href="/" selected={pathname === "/"} />
               )}
-              {routes["/login"] && (
+              {!isLoggedIn && routes["/login"] && (
                 <>
                   <Line background="neutral-alpha-medium" vert maxHeight="24" />
-                  {!isLoggedIn ? (
-                    <ToggleButton
-                      prefixIcon="person"
-                      href="/login"
-                      label="Login"
-                      selected={pathname === "/login"}
-                    />
-                  ) : (
-                    <ToggleButton
-                      prefixIcon="person"
-                      href="/login"
-                      selected={pathname === "/login"}
-                    />
-                  )}
+                  <ToggleButton
+                    prefixIcon="person"
+                    href="/login"
+                    label="Login"
+                    selected={pathname === "/login"}
+                  />
                 </>
               )}
             </Row>
@@ -136,6 +128,7 @@ export const Header = () => {
             gap="20"
           >
             {display.time && <TimeDisplay timeZone="UTC" />}
+            {display.themeSwitcher && <ThemeToggle />}
             <LanguageToggle />
           </Flex>
         </Flex>
